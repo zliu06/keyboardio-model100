@@ -1,0 +1,62 @@
+<div id="model100-reference">
+  <div class="viz-controls reference-controls">
+    <label class="form-label" for="model100-layer">Layer</label>
+    <select class="form-select" id="model100-layer">
+      <option value="PRIMARY">Base</option><option value="FUNCTION">Navigation</option>
+      <option value="MOUSE">Mouse</option><option value="NUMPAD">Numpad</option>
+    </select>
+  </div>
+  <div class="reference-layer" id="model100-current" aria-live="polite"></div>
+  <div class="reference-print" id="model100-print"></div>
+  <div class="text-small text-muted reference-legend">Position guide · Small top label = factory keycap · Main label = current action · Hold = modifier · Highlight = changed mapping</div>
+</div>
+<style>
+  #model100-reference {color:var(--foreground)}
+  #model100-reference .reference-layer {margin:16px 0}
+  #model100-reference .reference-hands {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+  #model100-reference .reference-hand {min-width:0}
+  #model100-reference .reference-keys {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+  #model100-reference .reference-key {min-width:0;min-height:70px;border:1px solid var(--border);border-radius:5px;padding:4px 2px;text-align:center;display:flex;flex-direction:column;justify-content:space-between;overflow-wrap:anywhere}
+  #model100-reference .reference-key.changed {background:var(--accent)}
+  #model100-reference .reference-action {font-weight:500}
+  #model100-reference .reference-thumb {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin:12px 0 4px}
+  #model100-reference .reference-palm {width:25%;min-width:80px;margin:10px auto}
+  #model100-reference .reference-header {display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px}
+  #model100-reference .reference-print {display:none}
+  @media(max-width:680px){#model100-reference .reference-hands{grid-template-columns:minmax(0,1fr)}}
+  @media print {
+    @page {size:landscape;margin:12mm}
+    #model100-reference .reference-controls,#model100-reference #model100-current,#model100-reference .reference-legend {display:none}
+    #model100-reference .reference-print {display:block}
+    #model100-reference .reference-print-layer {break-after:page;page-break-after:always}
+    #model100-reference .reference-print-layer:last-child {break-after:auto;page-break-after:auto}
+    #model100-reference .reference-hands {grid-template-columns:repeat(2,minmax(0,1fr))}
+    #model100-reference .reference-key {min-height:65px}
+  }
+</style>
+<script>
+(() => {
+  const root = document.getElementById('model100-reference');
+  const layers = __KEYMAP_DATA__;
+  const select = root.querySelector('#model100-layer');
+  const escape = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function key(k) {
+    return `<div class="reference-key ${k.changed?'changed':''}" role="group" aria-label="${escape(k.detail)}" data-tooltip="${escape(k.detail)}"><span class="text-small text-muted">${escape(k.cap)}</span><span class="reference-action">${escape(k.label)}</span><span class="text-small">${k.hold?'Hold '+escape(k.hold):'&nbsp;'}</span></div>`;
+  }
+  const left = [Array.from({length:7},(_,i)=>i),Array.from({length:7},(_,i)=>16+i),[32,33,34,35,36,37,null],[48,49,50,51,52,53,38]];
+  const right = [Array.from({length:7},(_,i)=>9+i),Array.from({length:7},(_,i)=>25+i),[null,42,43,44,45,46,47],[41,58,59,60,61,62,63]];
+  function hand(layer, name, rows, thumbs, palm) {
+    return `<section class="reference-hand"><div class="reference-header"><span>${name} hand</span><span class="text-small text-muted">Thumbs shown left → right</span></div><div class="reference-keys">${rows.flat().map(a=>a===null?'<div aria-hidden="true"></div>':key(layer.keys[a])).join('')}</div><div class="reference-thumb">${thumbs.map(a=>key(layer.keys[a])).join('')}</div><div class="reference-palm">${key(layer.keys[palm])}</div></section>`;
+  }
+  function render(layer) {
+    return `<div class="reference-hands">${hand(layer,'Left',left,[7,23,39,55],54)}${hand(layer,'Right',right,[56,40,24,8],57)}</div>`;
+  }
+  const saved = window.openai?.widgetState?.privateContent?.layer;
+  if (layers.some(l=>l.id===saved)) select.value=saved;
+  function update(){root.querySelector('#model100-current').innerHTML=render(layers.find(l=>l.id===select.value));}
+  update();
+  root.querySelector('#model100-print').innerHTML=layers.map(l=>`<section class="reference-print-layer"><h2>My Model 100 · ${l.name}</h2>${render(l)}<p class="text-small">Factory label above · Current action in middle · Modifier hold below · __REFERENCE_DATE__</p></section>`).join('');
+  select.addEventListener('change',()=>{update();window.openai?.setWidgetState?.({modelContent:{layer:select.value},privateContent:{layer:select.value}}).catch(()=>{});});
+  window.addEventListener('openai:set_globals',e=>{const id=e.detail?.globals?.widgetState?.privateContent?.layer;if(layers.some(l=>l.id===id)){select.value=id;update();}});
+})();
+</script>
