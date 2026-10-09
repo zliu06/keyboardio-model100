@@ -1,0 +1,13 @@
+{
+  "kaleidoscope": {
+    "repository": "https://github.com/keyboardio/Kaleidoscope.git",
+    "commit": "d07904a66196cba7a4f2abb8f31d087fd8b72f2b"
+  },
+  "gd32_core": {
+    "repository": "https://github.com/keyboardio/ArduinoCore-GD32-Keyboardio.git",
+    "commit": "d73e13cdb2abb7ede03fc56ca2576a983e38b773"
+  },
+  "board": "keyboardio:gd32:keyboardio_model_100",
+  "python": ">=3.9",
+  "arduino_cli_tested": "1.5.1"
+}
